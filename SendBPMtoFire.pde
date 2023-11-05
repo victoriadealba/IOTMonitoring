@@ -52,7 +52,7 @@
 
 // Firebase credentials
 #define FIREBASE_HOST "https://industry-monitoring-fe214-default-rtdb.firebaseio.com"
-#define FIREBASE_AUTH "AIzaSyA1EDvdDO3WNLQWXRyYzSEjUkzMn10EFVY"
+#define FIREBASE_AUTH "API_Key"
 
 #define USE_ARDUINO_INTERRUPTS false
 #include <PulseSensorPlayground.h>

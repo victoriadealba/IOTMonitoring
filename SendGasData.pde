@@ -115,4 +115,17 @@ void loop() {
         digitalWrite(BUZZER_PIN, LOW);
       }
   } 
+
+  if (Firebase.RTDB.getInt(&fbdo, "gasValue/int")) {
+      int gas_data = fbdo.intData();
+      Serial.println(gas_data);
+      if (gas_data > 1) 
+      {
+        digitalWrite(BUZZER_PIN, HIGH);
+      }
+      else
+      {
+        digitalWrite(BUZZER_PIN, LOW);
+      }
+  }
 }  // <- Added closing brace for the loop() function

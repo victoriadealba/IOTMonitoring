@@ -14,6 +14,9 @@
 #define FIREBASE_HOST "https://industry-monitoring-fe214-default-rtdb.firebaseio.com"
 #define FIREBASE_AUTH "APIkey"
 
+//define buzzer GPIO18
+#define BUZZER_PIN 18 
+
 // Set up Firebase data object, auth, and config
 FirebaseData fbdo;
 FirebaseAuth auth;
@@ -33,6 +36,9 @@ byte samplesUntilReport;
 void setup() {
   // initialize serial communication
   Serial.begin(115200);
+
+  //set the buzzer as output
+  pinMode(BUZZER_PIN, OUTPUT);
 
   // Connect to Wi-Fi
   WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
@@ -82,4 +88,31 @@ void loop() {
     Serial.println("Failed to send data to Firebase");
     Serial.println("Error Reason: " + fbdo.errorReason());
   }
+
+  //add the read from firebase to buzzer functionality
+  if (Firebase.RTDB.getInt(&fbdo, "bpm/int")) {
+      int bpm_data = fbdo.intData();
+      Serial.println(bpm_data);
+      if (bpm_data >= 80) 
+      {
+        digitalWrite(BUZZER_PIN, HIGH);
+      }
+      else
+      {
+        digitalWrite(BUZZER_PIN, LOW);
+      }
+  }
+
+  if (Firebase.RTDB.getInt(&fbdo, "bpm2/int")) {
+      int bpm2_data = fbdo.intData();
+      Serial.println(bpm2_data);
+      if (bpm2_data >= 80) 
+      {
+        digitalWrite(BUZZER_PIN, HIGH);
+      }
+      else
+      {
+        digitalWrite(BUZZER_PIN, LOW);
+      }
+  } 
 }  // <- Added closing brace for the loop() function

@@ -1,7 +1,7 @@
 #include <Arduino.h>
 #include <WiFi.h>
 #include <Firebase_ESP_Client.h>
-#include <SimpleTimer.h>
+#include <PulseSensorPlayground.h>
 
 // Include necessary Firebase libraries and helper functions
 #include "addons/TokenHelper.h"
@@ -12,8 +12,8 @@
 #define WIFI_PASSWORD "gogators"
 
 // Firebase credentials
-#define FIREBASE_HOST "https://industry-monitoring-fe214-default-rtdb.firebaseio.com"
-#define FIREBASE_AUTH "APIkey"
+#define FIREBASE_HOST "https://industry-monitoring-fe214-default-rtdb.firebaseio.com/"
+#define FIREBASE_AUTH "API_Key"
 
 //define buzzer GPIO18
 #define BUZZER_PIN 18 
@@ -31,9 +31,6 @@ const int THRESHOLD = 2000;
 // Sampling configuration
 const byte SAMPLES_PER_SERIAL_SAMPLE = 10;
 byte samplesUntilReport;
-
-//Initialize timer for buzzer
-SimpleTimer timer;
 
 #define AO_PIN 35 // ESP32's pin GPIO36 connected to AO pin of the MQ2 sensor
 
@@ -74,14 +71,15 @@ void setup() {
   Firebase.begin(&config, &auth);
   Firebase.reconnectWiFi(true);
 
-  Serial.println("Warming up the MQ2 sensor");
+  Serial.println("Warming up the Fire sensor");
   delay(20000);  // wait for the MQ2 to warm up
 }
 
 void loop() {
   int gasValue = analogRead(AO_PIN);
 
-  Serial.print("MQ2 sensor AO value: ");
+
+  Serial.print("Fire sensor AO value: ");
   Serial.println(gasValue);
 
   if (Firebase.RTDB.setInt(&fbdo, "gasValue/int", gasValue)) {
@@ -89,18 +87,17 @@ void loop() {
     Serial.println("Path: " + fbdo.dataPath());
     Serial.println("Data Type: " + fbdo.dataType());
   } else {
-    Serial.println("Failed to send data to Firebase");
-    Serial.println("Error Reason: " + fbdo.errorReason());
+    //Serial.println("Failed to send data to Firebase");
+    //Serial.println("Error Reason: " + fbdo.errorReason());
   }
 
   //add the read from firebase to buzzer functionality
   if (Firebase.RTDB.getInt(&fbdo, "bpm/int")) {
       int bpm_data = fbdo.intData();
       Serial.println(bpm_data);
-      if (bpm_data >= 100) 
+      if (bpm_data >= 80) 
       {
         digitalWrite(BUZZER_PIN, HIGH);
-        timer.setTimeout(1000, buzzerOff);  //only buzz for 1 sec
       }
       else
       {
@@ -111,28 +108,15 @@ void loop() {
   if (Firebase.RTDB.getInt(&fbdo, "bpm2/int")) {
       int bpm2_data = fbdo.intData();
       Serial.println(bpm2_data);
-      if (bpm2_data >= 100) 
+      if (bpm2_data >= 80 || gasValue < 1000) 
       {
         digitalWrite(BUZZER_PIN, HIGH);
-        timer.setTimeout(1000, buzzerOff);  //only buzz for 1 sec
+        delay(1000);
+        digitalWrite (BUZZER_PIN, LOW) ;  //no tone
       }
       else
       {
         digitalWrite(BUZZER_PIN, LOW);
       }
   } 
-
-  if (Firebase.RTDB.getInt(&fbdo, "gasValue/int")) {
-      int gas_data = fbdo.intData();
-      Serial.println(gas_data);
-      if (gas_data > 1) 
-      {
-        digitalWrite(BUZZER_PIN, HIGH);
-        timer.setTimeout(1000, buzzerOff);  //only buzz for 1 sec
-      }
-      else
-      {
-        digitalWrite(BUZZER_PIN, LOW);
-      }
-  }
-}  // <- Added closing brace for the loop() function
+}

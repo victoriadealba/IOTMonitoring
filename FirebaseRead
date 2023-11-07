@@ -1,0 +1,32 @@
+//defining variables:
+#define BUZZER_PIN 18 
+
+//inside setup():
+pinMode(BUZZER_PIN, OUTPUT);
+
+//inside loop():
+if (Firebase.RTDB.getInt(&fbdo, "bpm/int")) {
+      int bpm_data = fbdo.intData();
+      Serial.println(bpm_data);
+      if (bpm_data >= 80) 
+      {
+        digitalWrite(BUZZER_PIN, HIGH);
+      }
+      else
+      {
+        digitalWrite(BUZZER_PIN, LOW);
+      }
+}
+
+if (Firebase.RTDB.getInt(&fbdo, "bpm2/int")) {
+      int bpm2_data = fbdo.intData();
+      Serial.println(bpm2_data);
+      if (bpm2_data >= 80) 
+      {
+        digitalWrite(BUZZER_PIN, HIGH);
+      }
+      else
+      {
+        digitalWrite(BUZZER_PIN, LOW);
+      }
+} 

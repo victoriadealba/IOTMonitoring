@@ -1,6 +1,7 @@
 #include <Arduino.h>
 #include <WiFi.h>
 #include <Firebase_ESP_Client.h>
+#include <SimpleTimer.h>
 
 // Include necessary Firebase libraries and helper functions
 #include "addons/TokenHelper.h"
@@ -30,6 +31,9 @@ const int THRESHOLD = 2000;
 // Sampling configuration
 const byte SAMPLES_PER_SERIAL_SAMPLE = 10;
 byte samplesUntilReport;
+
+//Initialize timer for buzzer
+SimpleTimer timer;
 
 #define AO_PIN 35 // ESP32's pin GPIO36 connected to AO pin of the MQ2 sensor
 
@@ -93,9 +97,10 @@ void loop() {
   if (Firebase.RTDB.getInt(&fbdo, "bpm/int")) {
       int bpm_data = fbdo.intData();
       Serial.println(bpm_data);
-      if (bpm_data >= 80) 
+      if (bpm_data >= 100) 
       {
         digitalWrite(BUZZER_PIN, HIGH);
+        timer.setTimeout(1000, buzzerOff);  //only buzz for 1 sec
       }
       else
       {
@@ -106,13 +111,28 @@ void loop() {
   if (Firebase.RTDB.getInt(&fbdo, "bpm2/int")) {
       int bpm2_data = fbdo.intData();
       Serial.println(bpm2_data);
-      if (bpm2_data >= 80) 
+      if (bpm2_data >= 100) 
       {
         digitalWrite(BUZZER_PIN, HIGH);
+        timer.setTimeout(1000, buzzerOff);  //only buzz for 1 sec
       }
       else
       {
         digitalWrite(BUZZER_PIN, LOW);
       }
   } 
+
+  if (Firebase.RTDB.getInt(&fbdo, "gasValue/int")) {
+      int gas_data = fbdo.intData();
+      Serial.println(gas_data);
+      if (gas_data > 1) 
+      {
+        digitalWrite(BUZZER_PIN, HIGH);
+        timer.setTimeout(1000, buzzerOff);  //only buzz for 1 sec
+      }
+      else
+      {
+        digitalWrite(BUZZER_PIN, LOW);
+      }
+  }
 }  // <- Added closing brace for the loop() function

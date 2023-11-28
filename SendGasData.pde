@@ -1,9 +1,8 @@
 #include <Arduino.h>
 #include <WiFi.h>
 #include <Firebase_ESP_Client.h>
-#include <SimpleTimer.h>
 
-// Include necessary Firebase libraries and helper functions
+// Firebase libraries and helper functions
 #include "addons/TokenHelper.h"
 #include "addons/RTDBHelper.h"
 
@@ -11,40 +10,35 @@
 #define WIFI_SSID "ufdevice"
 #define WIFI_PASSWORD "gogators"
 
-// Firebase credentials
-#define FIREBASE_HOST "https://industry-monitoring-fe214-default-rtdb.firebaseio.com"
-#define FIREBASE_AUTH "APIkey"
+// Insert Firebase project API Key
+#define API_KEY "API_Key"
 
-//define buzzer GPIO18
-#define BUZZER_PIN 18 
+// Insert RTDB URLefine the RTDB URL */
+#define DATABASE_URL "https://industry-monitoring-fe214-default-rtdb.firebaseio.com/" 
+#define AO_PIN 35 // ESP32's pin GPIO36 connected to AO pin of the MQ2 sensor
 
-// Set up Firebase data object, auth, and config
+// Define buzzer and LED GPIO pins
+#define BUZZER_PIN 18
+#define LED_PIN 19 // Red LED pin
+
+//Define Firebase Data object
 FirebaseData fbdo;
 FirebaseAuth auth;
 FirebaseConfig config;
+
+unsigned long sendDataPrevMillis = 0;
+int intValue;
+float floatValue;
 bool signupOK = false;
-
-// Pin configuration for the PulseSensor
-const int PULSE_INPUT = 36;
-const int THRESHOLD = 2000;
-
-// Sampling configuration
-const byte SAMPLES_PER_SERIAL_SAMPLE = 10;
-byte samplesUntilReport;
-
-//Initialize timer for buzzer
-SimpleTimer timer;
-
-#define AO_PIN 35 // ESP32's pin GPIO36 connected to AO pin of the MQ2 sensor
 
 void setup() {
   // initialize serial communication
   Serial.begin(115200);
 
-  //set the buzzer as output
+  // set the buzzer and LED as outputs
   pinMode(BUZZER_PIN, OUTPUT);
-
-  // Connect to Wi-Fi
+  pinMode(LED_PIN, OUTPUT);
+  
   WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
   Serial.print("Connecting to Wi-Fi");
   while (WiFi.status() != WL_CONNECTED) {
@@ -56,83 +50,90 @@ void setup() {
   Serial.println(WiFi.localIP());
   Serial.println();
 
-  // Initialize Firebase configuration
-  config.api_key = FIREBASE_AUTH;
-  config.database_url = FIREBASE_HOST;
+  /* Assign the api key (required) */
+  config.api_key = API_KEY;
 
-  // Sign up with Firebase
+  /* Assign the RTDB URL (required) */
+  config.database_url = DATABASE_URL;
+
+  /* Sign up */
   if (Firebase.signUp(&config, &auth, "", "")) {
-    Serial.println("Firebase signup successful");
+    Serial.println("ok");
     signupOK = true;
-  } else {
-    Serial.printf("Firebase signup error: %s\n", config.signer.signupError.message.c_str());
+  }
+  else {
+    Serial.printf("%s\n", config.signer.signupError.message.c_str());
   }
 
-  // Set the token status callback function
-  config.token_status_callback = tokenStatusCallback;
+  /* Assign the callback function for the long running token generation task */
+  config.token_status_callback = tokenStatusCallback; //see addons/TokenHelper.h
 
   Firebase.begin(&config, &auth);
   Firebase.reconnectWiFi(true);
-
-  Serial.println("Warming up the MQ2 sensor");
-  delay(20000);  // wait for the MQ2 to warm up
 }
 
 void loop() {
-  int gasValue = analogRead(AO_PIN);
+  if (Firebase.ready() && signupOK && (millis() - sendDataPrevMillis > 15000 || sendDataPrevMillis == 0)) {
+    sendDataPrevMillis = millis();
 
-  Serial.print("MQ2 sensor AO value: ");
-  Serial.println(gasValue);
+    Serial.print("Fire sensor AO value: ");
+    int gasValue = analogRead(AO_PIN);
+    Serial.println(gasValue);
 
-  if (Firebase.RTDB.setInt(&fbdo, "gasValue/int", gasValue)) {
-    Serial.println("Data sent to Firebase");
-    Serial.println("Path: " + fbdo.dataPath());
-    Serial.println("Data Type: " + fbdo.dataType());
-  } else {
-    Serial.println("Failed to send data to Firebase");
-    Serial.println("Error Reason: " + fbdo.errorReason());
+    // Attempt to send data to Firebase
+    if (Firebase.RTDB.setInt(&fbdo, "/gasValue/int", gasValue)) {
+      Serial.println("Data sent to Firebase");
+      Serial.println("Path: " + fbdo.dataPath());
+      Serial.println("Data Type: " + fbdo.dataType());
+    } else {
+      Serial.println("Failed to send data to Firebase");
+      Serial.println("Error Reason: " + fbdo.errorReason());
+    }
+
+    if (Firebase.RTDB.getInt(&fbdo, "/bpm/int")) {
+      if (fbdo.dataType() == "int") {
+        int bpm_data = fbdo.intData();
+        Serial.println(bpm_data);
+        if (bpm_data >= 80) 
+        {
+          digitalWrite(BUZZER_PIN, HIGH);
+          digitalWrite(LED_PIN, HIGH); // Turn on the red LED
+          delay(1000);
+          digitalWrite(BUZZER_PIN, LOW);
+          //digitalWrite(LED_PIN, LOW); // Turn off the red LED
+        }
+        else
+        {
+          digitalWrite(BUZZER_PIN, LOW);
+          digitalWrite(LED_PIN, LOW);
+        }
+      }
+    }
+    else {
+      Serial.println(fbdo.errorReason());
+    }
+    
+    if (Firebase.RTDB.getInt(&fbdo, "/bpm2/int")) {
+      if (fbdo.dataType() == "int") {
+        int bpm2_data = fbdo.intData();
+        Serial.println(bpm2_data);
+        if (bpm2_data >= 80 || gasValue < 1000) 
+        {
+          digitalWrite(BUZZER_PIN, HIGH);
+          digitalWrite(LED_PIN, HIGH); // Turn on the red LED
+          delay(1000);
+          digitalWrite(BUZZER_PIN, LOW);
+          //digitalWrite(LED_PIN, LOW); // Turn off the red LED
+        }
+        else
+        {
+          digitalWrite(BUZZER_PIN, LOW);
+          digitalWrite(LED_PIN, LOW);
+        }
+      }
+    }
+    else {
+      Serial.println(fbdo.errorReason());
+    }
   }
-
-  //add the read from firebase to buzzer functionality
-  if (Firebase.RTDB.getInt(&fbdo, "bpm/int")) {
-      int bpm_data = fbdo.intData();
-      Serial.println(bpm_data);
-      if (bpm_data >= 100) 
-      {
-        digitalWrite(BUZZER_PIN, HIGH);
-        timer.setTimeout(1000, buzzerOff);  //only buzz for 1 sec
-      }
-      else
-      {
-        digitalWrite(BUZZER_PIN, LOW);
-      }
-  }
-
-  if (Firebase.RTDB.getInt(&fbdo, "bpm2/int")) {
-      int bpm2_data = fbdo.intData();
-      Serial.println(bpm2_data);
-      if (bpm2_data >= 100) 
-      {
-        digitalWrite(BUZZER_PIN, HIGH);
-        timer.setTimeout(1000, buzzerOff);  //only buzz for 1 sec
-      }
-      else
-      {
-        digitalWrite(BUZZER_PIN, LOW);
-      }
-  } 
-
-  if (Firebase.RTDB.getInt(&fbdo, "gasValue/int")) {
-      int gas_data = fbdo.intData();
-      Serial.println(gas_data);
-      if (gas_data > 1) 
-      {
-        digitalWrite(BUZZER_PIN, HIGH);
-        timer.setTimeout(1000, buzzerOff);  //only buzz for 1 sec
-      }
-      else
-      {
-        digitalWrite(BUZZER_PIN, LOW);
-      }
-  }
-}  // <- Added closing brace for the loop() function
+}

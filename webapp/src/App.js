@@ -11,6 +11,7 @@ function App() {
   return (
     <div className="App">
       <header className="App-header">
+        <h1>Industrial Monitoring</h1>
        <BpmReading />
        <Bpm2Reading />
        <PpmReading />

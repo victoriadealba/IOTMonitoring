@@ -13,7 +13,7 @@ function PpmReading() {
     onValue(gasRef, (snapshot) => {
       const data = snapshot.val();
       setPpm(data);
-      if (data <= 0)
+      if (data <= 1000)
       {
         setGasContainer('container2');
       }
@@ -22,8 +22,9 @@ function PpmReading() {
 
   return (
     <div className={gasContainer}>
-      Level of Toxins in the Room: {ppm}
+      {ppm <= 1000 ? 'Fire detected' : 'No Fire detected'} 
     </div>
+    
   );
 }
 

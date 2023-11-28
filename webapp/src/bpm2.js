@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { onValue, ref } from "firebase/database";
 import { db } from "./firebase.js";
 import './App.css';
+import heartImage from "./heartBeat.png";
 
 function Bpm2Reading() {
   const [bpm2, setBpm] = useState(null);
@@ -22,7 +23,10 @@ function Bpm2Reading() {
 
   return (
     <div className={bpmContainer}>
-      Realtime BPM2: {bpm2}
+      <div className='heart-container'>
+      <div className="heart-animation" style={{backgroundImage: `url(${heartImage})`}}></div>
+          Realtime BPM2: {bpm2}
+      </div>
     </div>
   );
 }

@@ -16,8 +16,8 @@
   border-radius: 8px;
   box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
   transition: border-color 0.3s ease;
-  margin-bottom: 10px;
-  margin-top: 10px;
+  margin-bottom: 15px;
+  margin-top: 15px;
   box-sizing: border-box; 
   background-color:rgb(203, 241, 164);
   color:#2a2a2a;
@@ -35,8 +35,8 @@
   border-radius: 8px;
   box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
   transition: border-color 0.3s ease;
-  margin-bottom: 10px;
-  margin-top: 10px;
+  margin-bottom: 15px;
+  margin-top: 15px;
   box-sizing: border-box; 
   background-color:rgb(248, 85, 79);
   color:#2a2a2a;
@@ -65,15 +65,26 @@
   color: white;
 }
 
-.App-link {
-  color: #61dafb;
+.heart-container {
+  display: flex;
+  align-items: center; /* Align items vertically */
 }
 
-@keyframes App-logo-spin {
-  from {
-    transform: rotate(0deg);
+.heart-animation {
+  width: 70px;
+  height: 70px;
+  background-size:cover;
+  border-radius: 50%;
+  position: relative;
+  right: -500px;
+  animation: heartbeat 1s infinite;
+}
+
+@keyframes heartbeat {
+  0%, 100% {
+    transform: scale(1);
   }
-  to {
-    transform: rotate(360deg);
+  50% {
+    transform: scale(1.3);
   }
 }

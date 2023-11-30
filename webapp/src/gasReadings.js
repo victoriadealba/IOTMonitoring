@@ -17,6 +17,10 @@ function PpmReading() {
       {
         setGasContainer('container2');
       }
+      else
+      {
+        setGasContainer('container1');
+      }
     });
   }, []);
 

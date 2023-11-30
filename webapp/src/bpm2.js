@@ -18,6 +18,10 @@ function Bpm2Reading() {
       {
         setBpmContainer('container2');
       }
+      else
+      {
+        setBpmContainer('container1');
+      }
     });
   }, []);
 

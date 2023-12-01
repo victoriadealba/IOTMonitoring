@@ -4,7 +4,7 @@ import { getDatabase, ref, onValue } from "firebase/database";
 //import { getAnalytics } from "firebase/analytics";
 
 const firebaseConfig = {
-  apiKey: "AIzaSyA1EDvdDO3WNLQWXRyYzSEjUkzMn10EFVY",
+  apiKey: "APIKEY",
   authDomain: "industry-monitoring-fe214.firebaseapp.com",
   databaseURL: "https://industry-monitoring-fe214-default-rtdb.firebaseio.com",
   projectId: "industry-monitoring-fe214",

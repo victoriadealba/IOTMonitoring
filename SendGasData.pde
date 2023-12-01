@@ -6,12 +6,12 @@
 #include "addons/TokenHelper.h"
 #include "addons/RTDBHelper.h"
 
-// Replace with your network credentials
-#define WIFI_SSID "ufdevice"
-#define WIFI_PASSWORD "gogators"
+// Insert your network credentials
+#define WIFI_SSID "ssid"
+#define WIFI_PASSWORD "password"
 
 // Insert Firebase project API Key
-#define API_KEY "API_Key"
+#define API_KEY "API_KEY"
 
 // Insert RTDB URLefine the RTDB URL */
 #define DATABASE_URL "https://industry-monitoring-fe214-default-rtdb.firebaseio.com/" 
@@ -94,18 +94,18 @@ void loop() {
       if (fbdo.dataType() == "int") {
         int bpm_data = fbdo.intData();
         Serial.println(bpm_data);
-        if (bpm_data >= 80) 
+        if (bpm_data > 160 || bpm_data < 50) 
         {
           digitalWrite(BUZZER_PIN, HIGH);
-          digitalWrite(LED_PIN, HIGH); // Turn on the red LED
+          digitalWrite(LED_PIN, LOW); // Turn on the red LED
           delay(1000);
           digitalWrite(BUZZER_PIN, LOW);
-          //digitalWrite(LED_PIN, LOW); // Turn off the red LED
+          digitalWrite(LED_PIN, HIGH); // Turn off the red LED
         }
         else
         {
           digitalWrite(BUZZER_PIN, LOW);
-          digitalWrite(LED_PIN, LOW);
+          digitalWrite(LED_PIN, HIGH);
         }
       }
     }
@@ -117,18 +117,18 @@ void loop() {
       if (fbdo.dataType() == "int") {
         int bpm2_data = fbdo.intData();
         Serial.println(bpm2_data);
-        if (bpm2_data >= 80 || gasValue < 1000) 
+        if ( (bpm2_data > 160 || bpm2_data < 50) || gasValue < 1000) 
         {
           digitalWrite(BUZZER_PIN, HIGH);
-          digitalWrite(LED_PIN, HIGH); // Turn on the red LED
+          digitalWrite(LED_PIN, LOW); // Turn on the red LED
           delay(1000);
           digitalWrite(BUZZER_PIN, LOW);
-          //digitalWrite(LED_PIN, LOW); // Turn off the red LED
+          digitalWrite(LED_PIN, HIGH); // Turn off the red LED
         }
         else
         {
           digitalWrite(BUZZER_PIN, LOW);
-          digitalWrite(LED_PIN, LOW);
+          digitalWrite(LED_PIN, HIGH);
         }
       }
     }
